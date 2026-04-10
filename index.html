@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ulike AI Pro">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+
+    <title>Ulike Air 10 Assistant Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary: #ff4d6d;
+            --secondary: #70a1ff;
+            --success: #4caf50;
+            --bg: #f2f2f7;
+            --card: #ffffff;
+            --text: #1c1c1e;
+            --gray: #8e8e93;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.4;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Estructura de Pantallas */
+        .screen { display: none; padding: 25px; padding-top: 60px; padding-bottom: 140px; min-height: 100vh; box-sizing: border-box; }
+        .screen.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Componentes UI */
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        h1 { font-size: 30px; font-weight: 800; margin-bottom: 10px; color: var(--text); }
+        h2 { font-size: 22px; font-weight: 700; margin-bottom: 15px; }
+        h3 { font-size: 18px; margin: 0; }
+
+        .btn-main {
+            background: linear-gradient(135deg, #ff7aa2, var(--primary));
+            color: white; border: none; padding: 18px; border-radius: 16px;
+            width: 100%; font-size: 17px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.3);
+            transition: transform 0.1s;
+        }
+        .btn-main:active { transform: scale(0.98); }
+
+        .btn-outline {
+            background: transparent; border: 2px solid var(--primary);
+            color: var(--primary); padding: 14px; border-radius: 14px; width: 100%; font-weight: 600; cursor: pointer;
+        }
+
+        .btn-calendar {
+            background: #e8f5e9; border: 1px solid var(--success);
+            color: var(--success); padding: 12px; border-radius: 12px; width: 100%; 
+            font-weight: 600; margin-top: 10px; cursor: pointer;
+        }
+
+        label { font-weight: 600; font-size: 14px; display: block; margin-top: 15px; margin-bottom: 5px; }
+
+        select {
+            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd;
+            background: #f9f9f9; font-size: 16px; margin: 5px 0 10px 0; -webkit-appearance: none;
+        }
+
+        /* Selector de Color de Vello */
+        .hair-color-container { display: flex; gap: 15px; margin: 15px 0; padding-bottom: 5px; justify-content: space-around; }
+        .hair-option { text-align: center; font-size: 11px; cursor: pointer; opacity: 0.5; transition: 0.3s; }
+        .hair-option.selected { opacity: 1; font-weight: bold; transform: scale(1.1); }
+        .color-circle { width: 45px; height: 45px; border-radius: 50%; border: 3px solid transparent; margin: 0 auto 5px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        .hair-option.selected .color-circle { border-color: var(--primary); }
+
+        /* Grid de Zonas */
+        .zones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .zone-item {
+            background: var(--card); padding: 18px; border-radius: 18px; text-align: center;
+            border: 2px solid transparent; transition: 0.2s; font-weight: 500; font-size: 13px;
+        }
+        .zone-item.selected { border-color: var(--primary); color: var(--primary); background: #fff0f5; }
+
+        /* Helpers & Toasts */
+        .tip-box { background: #eefbff; border-left: 4px solid var(--secondary); padding: 15px; border-radius: 12px; font-size: 13px; margin-top: 10px; }
+        .helper-box { background: #fdf1f3; border: 1px dashed var(--primary); padding: 15px; border-radius: 15px; margin-top: 10px; font-size: 13px; }
+        .success-card { background: #f1f8f1; border: 1px solid var(--success); padding: 15px; border-radius: 15px; margin-top: 10px; animation: fadeIn 0.3s; }
+
+        /* Navbar */
+        .nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(20px);
+            display: none; justify-content: space-around; padding: 15px 10px 35px;
+            border-top: 0.5px solid #d1d1d6; z-index: 1000;
+        }
+        .nav-btn { background: none; border: none; color: var(--gray); font-size: 11px; font-weight: 600; display: flex; flex-direction: column; align-items: center; }
+        .nav-btn.active { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div id="scr-welcome" class="screen active">
+        <div style="text-align: center; margin-top: 80px;">
+            <div style="font-size: 80px;">✨</div>
+            <h1>Ulike AI Assistant</h1>
+            <p style="color: var(--gray);">Protocolos expertos para tu Air 10</p>
+            <div id="welcome-action-area" style="margin-top: 40px;">
+                <button class="btn-main" onclick="showScreen('scr-profile')">Empezar Configuración</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scr-profile" class="screen">
+        <h2>👤 Perfil Biométrico</h2>
+        <div class="card">
+            <label>Tono de Piel (Escala Fitzpatrick)</label>
+            <select id="p-skin">
+                <option value="1">I - Muy Blanca (Siempre se quema)</option>
+                <option value="2">II - Blanca (Se quema fácil)</option>
+                <option value="3">III - Trigueña Clara</option>
+                <option value="4">IV - Trigueña Oscura</option>
+                <option value="5">V - Oscura (Gran resistencia)</option>
+            </select>
+
+            <label>¿Has usado láser clínico antes?</label>
+            <select id="p-clinical">
+                <option value="no">No, nunca</option>
+                <option value="si">Sí, en centros de estética</option>
+            </select>
+
+            <label>Color natural del vello</label>
+            <div class="hair-color-container">
+                <div class="hair-option" id="h-negro" onclick="setHair('negro')">
+                    <div class="color-circle" style="background: #1a1a1a;"></div>Negro
+                </div>
+                <div class="hair-option" id="h-castano" onclick="setHair('castano')">
+                    <div class="color-circle" style="background: #4b3621;"></div>Castaño
+                </div>
+                <div class="hair-option" id="h-rubio" onclick="setHair('rubio')">
+                    <div class="color-circle" style="background: #e1b382;"></div>Rubio
+                </div>
+            </div>
+
+            <label>Sensibilidad de Piel</label>
+            <select id="p-sens" onchange="toggleSensHelper()">
+                <option value="baja">Baja (Piel resistente)</option>
+                <option value="alta">Alta (Se irrita con facilidad)</option>
+                <option value="no_se">No lo sé (Ayúdame a saber)</option>
+            </select>
+
+            <div id="sens-helper-ui" class="helper-box" style="display:none;">
+                <b>Test de Sensibilidad:</b><br>
+                <label style="font-weight:400; margin-top:10px;"><input type="checkbox" class="s-check"> ¿Tu piel se pone roja tras el sol?</label>
+                <label style="font-weight:400"><input type="checkbox" class="s-check"> ¿Sientes ardor al usar cremas?</label>
+                <label style="font-weight:400"><input type="checkbox" class="s-check"> ¿Te salen puntos rojos al afeitarte?</label>
+                <p style="font-size:11px; color:var(--primary); margin-top:10px;">Si marcaste 2 o más, selecciona "Alta" arriba.</p>
+            </div>
+
+            <button class="btn-main" style="margin-top:20px" onclick="saveProfile(); showScreen('scr-zones')">Siguiente paso →</button>
+        </div>
+    </div>
+
+    <div id="scr-zones" class="screen">
+        <h2>📍 Zonas a Tratar</h2>
+        <div class="zones-grid" id="zones-container"></div>
+        <button class="btn-main" style="margin-top:25px;" onclick="goToVelloDetails()">Analizar Vello por Zona</button>
+    </div>
+
+    <div id="scr-details" class="screen">
+        <h2>🔬 Análisis Foliar</h2>
+        <div id="vello-details-list"></div>
+        <button class="btn-main" onclick="generateMasterPlan()">Generar Plan Maestro</button>
+    </div>
+
+    <div id="scr-home" class="screen">
+        <h1>🏠 Mi Plan Air 10</h1>
+        <div id="plan-results"></div>
+    </div>
+
+    <div id="scr-progress" class="screen">
+        <h2>📈 Mi Progreso</h2>
+        
+        <div class="card">
+            <canvas id="progressChart" style="max-height: 250px;"></canvas>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom:15px; font-size:16px;">📅 Historial Visual</h3>
+            <div id="calendar-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <button onclick="changeMonth(-1)" style="border:none; background:none; font-size:18px;">‹</button>
+                <span id="current-month-year" style="font-weight:bold; font-size:14px;"></span>
+                <button onclick="changeMonth(1)" style="border:none; background:none; font-size:18px;">›</button>
+            </div>
+            <div id="calendar-grid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:5px; text-align:center; font-size:12px;"></div>
+            <div id="day-details" style="margin-top:15px; font-size:11px; color:var(--gray); min-height:20px;">
+                Selecciona un día marcado para ver zonas.
+            </div>
+        </div>
+
+        <div id="history-list" class="card">
+            <h3>Últimas Sesiones</h3>
+            <div id="history-items" style="margin-top:10px; font-size:13px;"></div>
+        </div>
+    </div>
+</div>
+
+    <nav class="nav" id="bottom-nav">
+        <button class="nav-btn" onclick="showScreen('scr-home')"><span>🏠</span>PLAN</button>
+        <button class="nav-btn" onclick="showScreen('scr-progress')"><span>📈</span>PROGRESO</button>
+        <button class="nav-btn" onclick="showScreen('scr-profile')"><span>👤</span>PERFIL</button>
+        <button class="nav-btn" onclick="resetApp()" style="color:red"><span>⚠️</span>RESET</button>
+    </nav>
+
+<script>
+// 1. DATA MASTER & CONFIGURACIÓN INICIAL
+const ZONES_DB = ["Rostro(Bozzo/Menton)", "Patilla", "Axilas", "Brazos", "Línea de Alba", "Abdomen", "Bikini", "Zona Íntima", "Muslos", "Pantorrillas", "Piernas Completas", "Espalda", "Gluteos", "Manos/Pies"];
+const EST_FLASHES = { "Rostro(Bozzo/Menton)": 15, "Axilas": 30, "Piernas Completas": 200, "Zona Íntima": 50, "Brazos": 80, "Gluteos": 60, "Espalda": 150 };
+
+const HIERARCHY = {
+    "Piernas Completas": ["Muslos", "Pantorrillas"],
+    "Brazos": ["Manos/Pies"]
+};
+
+let state = JSON.parse(localStorage.getItem('ulike_ultra_db')) || {
+    profile: { skin: "1", clinical: "no", hair: "negro", sens: "baja" },
+    selectedZones: [],
+    velloConfig: {}, // Aquí se guarda grosor y densidad
+    sessions: []
+};
+
+function init() {
+    renderZonesGrid();
+    document.getElementById('p-skin').value = state.profile.skin;
+    document.getElementById('p-clinical').value = state.profile.clinical;
+    document.getElementById('p-sens').value = state.profile.sens;
+    setHair(state.profile.hair);
+
+    if(state.selectedZones.length > 0) {
+        document.getElementById('welcome-action-area').innerHTML = `
+            <button class="btn-main" onclick="showScreen('scr-home')">Ver Mi Plan Personalizado</button>
+            <p onclick="showScreen('scr-profile')" style="color:var(--primary); font-size:13px; margin-top:15px; font-weight:600; cursor:pointer; text-decoration:underline;">Editar Perfil Biométrico</p>
+        `;
+    }
+}
+
+// 2. NAVEGACIÓN Y PERSISTENCIA
+function persist() { localStorage.setItem('ulike_ultra_db', JSON.stringify(state)); }
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('bottom-nav').style.display = (['scr-home', 'scr-progress', 'scr-profile'].includes(id)) ? 'flex' : 'none';
+    
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    if(id === 'scr-home') { generateMasterPlan(); document.querySelector('.nav-btn:nth-child(1)').classList.add('active'); }
+    if(id === 'scr-progress') { renderProgress(); document.querySelector('.nav-btn:nth-child(2)').classList.add('active'); }
+    if(id === 'scr-profile') document.querySelector('.nav-btn:nth-child(3)').classList.add('active');
+    window.scrollTo(0,0);
+}
+
+// 3. GESTIÓN DE ZONAS
+function renderZonesGrid() {
+    const container = document.getElementById('zones-container');
+    container.innerHTML = "";
+    let hidden = [];
+    state.selectedZones.forEach(z => { if(HIERARCHY[z]) hidden = hidden.concat(HIERARCHY[z]); });
+
+    ZONES_DB.forEach(z => {
+        if(hidden.includes(z)) return;
+        const div = document.createElement('div');
+        div.className = `zone-item ${state.selectedZones.includes(z) ? 'selected' : ''}`;
+        div.innerText = z;
+        div.onclick = () => {
+            state.selectedZones.includes(z) ? 
+                state.selectedZones = state.selectedZones.filter(i => i !== z) : 
+                state.selectedZones.push(z);
+            if(HIERARCHY[z]) state.selectedZones = state.selectedZones.filter(i => !HIERARCHY[z].includes(i));
+            persist(); renderZonesGrid();
+        };
+        container.appendChild(div);
+    });
+}
+
+// 4. LÓGICA DE PERFIL Y VELLO
+function setHair(color) {
+    document.querySelectorAll('.hair-option').forEach(o => o.classList.remove('selected'));
+    if(document.getElementById(`h-${color}`)) document.getElementById(`h-${color}`).classList.add('selected');
+    state.profile.hair = color;
+}
+
+function toggleSensHelper() {
+    document.getElementById('sens-helper-ui').style.display = (document.getElementById('p-sens').value === 'no_se') ? 'block' : 'none';
+}
+
+function saveProfile() {
+    state.profile.skin = document.getElementById('p-skin').value;
+    state.profile.clinical = document.getElementById('p-clinical').value;
+    state.profile.sens = document.getElementById('p-sens').value;
+    persist();
+}
+
+function goToVelloDetails() {
+    if(state.selectedZones.length === 0) return alert("Selecciona al menos una zona.");
+    const list = document.getElementById('vello-details-list');
+    list.innerHTML = "";
+    state.selectedZones.forEach(z => {
+        if(!state.velloConfig[z]) state.velloConfig[z] = { den: 'media', gro: 'medio' };
+        list.innerHTML += `
+            <div class="card">
+                <h3 style="color:var(--primary)">${z}</h3>
+                <label>Densidad Folicular</label>
+                <select onchange="updateVello('${z}', 'den', this.value)">
+                    <option value="media" ${state.velloConfig[z].den==='media'?'selected':''}>Media (Vello normal)</option>
+                    <option value="mucha" ${state.velloConfig[z].den==='mucha'?'selected':''}>Mucha (Zonas muy pobladas)</option>
+                    <option value="poca" ${state.velloConfig[z].den==='poca'?'selected':''}>Poca (Vello disperso)</option>
+                </select>
+                <label>Grosor del Vello</label>
+                <select onchange="updateVello('${z}', 'gro', this.value)">
+                    <option value="medio" ${state.velloConfig[z].gro==='medio'?'selected':''}>Medio</option>
+                    <option value="grueso" ${state.velloConfig[z].gro==='grueso'?'selected':''}>Grueso / Raíz Fuerte</option>
+                    <option value="fino" ${state.velloConfig[z].gro==='fino'?'selected':''}>Fino / Tipo Pelusa</option>
+                </select>
+            </div>`;
+    });
+    showScreen('scr-details');
+}
+
+function updateVello(zone, key, val) { state.velloConfig[zone][key] = val; persist(); }
+
+// 5. MOTOR DE RECOMENDACIÓN EXPERTA (GENERACIÓN DE PLAN)
+function registerAndPlan(zone) {
+    // 1. Registrar la sesión actual en el estado
+    state.sessions.push({ zone: zone, date: new Date().toISOString() });
+    persist();
+
+    // 2. Obtener datos para el cálculo inteligente
+    const sesionesEnZona = state.sessions.filter(s => s.zone === zone).length;
+    const v = state.velloConfig[zone] || { den: 'media', gro: 'medio' };
+    
+    // 3. CÁLCULO DINÁMICO DE RECURRENCIA
+    // Base según el manual (Frecuencia intensiva)
+    let diasParaSiguiente = 2; 
+
+    // Ajuste por Fase de Tratamiento
+    if (sesionesEnZona > 6 && sesionesEnZona <= 10) diasParaSiguiente = 4;
+    if (sesionesEnZona > 10) diasParaSiguiente = 15;
+
+    // AJUSTES PERSONALIZADOS (Tu perfil técnico)
+    if (state.profile.clinical === 'si') diasParaSiguiente += 2; // Menos prisa si ya vienes de clínica
+    if (v.gro === 'fino') diasParaSiguiente += 3;               // El vello fino no requiere tanta frecuencia
+    if (state.profile.sens === 'alta') diasParaSiguiente += 1;   // Margen de seguridad para tu piel
+
+    // 4. Calcular la fecha real
+    const next = new Date();
+    next.setDate(next.getDate() + diasParaSiguiente);
+    
+    // 5. ACTUALIZAR LA INTERFAZ (ID corregido)
+    const cid = `action-${zone.replace(/\s/g, '').replace(/\//g, '')}`;
+    const contenedor = document.getElementById(cid);
+    
+    if (contenedor) {
+        contenedor.innerHTML = `
+            <div class="success-card" style="border-color:var(--success); background:#fafffa;">
+                <b style="color:var(--success)">¡Sesión #${sesionesEnZona} Registrada!</b> ✨<br>
+                <span style="font-size:12px;">Siguiente cita optimizada para vello ${v.gro}:</span><br>
+                <b style="font-size:15px;">${next.toLocaleDateString()}</b><br>
+                <button class="btn-calendar" onclick="scheduleCalendar('${zone}', '${next.toISOString()}')">📅 Agendar en ${diasParaSiguiente} días</button>
+            </div>`;
+    }
+}
+
+// Asegúrate de que generateMasterPlan use el ID correcto para el contenedor
+function generateMasterPlan() {
+    const res = document.getElementById('plan-results');
+    res.innerHTML = "";
+    if(state.selectedZones.length === 0) { res.innerHTML = "<p>No hay zonas seleccionadas.</p>"; return; }
+
+    state.selectedZones.forEach(z => {
+        const v = state.velloConfig[z] || { den: 'media', gro: 'medio' };
+        let lvl = 10 - (parseInt(state.profile.skin) * 1.5);
+        
+        // 1. Lógica de Potencia (Skin + Vello)
+        if(v.gro === 'grueso') lvl += 2; 
+        if(v.gro === 'fino') lvl -= 1;
+        
+        // 2. Selección de Modo
+        let modoUso = "Normal Mode";
+        let instrucciones = ["Realiza 2 pasadas lentas por la zona."];
+        let flashes = EST_FLASHES[z] || 45;
+
+        if(z.includes("Piernas") || z.includes("Espalda") || z.includes("Brazos")) {
+            modoUso = "SHR MODE (Rápido)";
+            instrucciones.push("Mantén presionado y desliza continuamente.");
+        } else if(z.includes("Íntima") || z.includes("Bikini") || v.gro === 'grueso') {
+            modoUso = "HIGH MODE (Potente)";
+            instrucciones.push("Presiona firmemente para enfriamiento máximo.");
+        }
+
+        // 3. Ajuste por Sensibilidad Alta
+        if(state.profile.sens === 'alta') {
+            lvl -= 2;
+            if(lvl < 4) modoUso = "SOFT MODE (Seguro)";
+            instrucciones.unshift("⚠️ Piel sensible: Inicia con disparo de prueba.");
+        }
+
+        const finalLvl = Math.max(1, Math.min(10, Math.round(lvl)));
+        let intensityColor = finalLvl > 7 ? "#ff4d6d" : (finalLvl > 4 ? "#ff9800" : "#4caf50");
+        const cid = `action-${z.replace(/\s/g, '').replace(/\//g, '')}`;
+
+        res.innerHTML += `
+            <div class="card" style="border-left: 6px solid ${intensityColor}">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:10px; font-weight:bold; color:${intensityColor}; text-transform:uppercase;">${modoUso}</span>
+                    <span style="font-size:11px; background:#f0f0f0; padding:2px 8px; border-radius:10px; color:var(--gray)">~${flashes} disparos</span>
+                </div>
+                
+                <h3 style="margin: 0 0 10px 0; font-size:19px;">${z}</h3>
+                
+                <div style="display:flex; gap:10px; margin-bottom:12px;">
+                    <div style="font-size:11px; color:var(--gray); background:#f9f9f9; padding:4px 8px; border-radius:6px; border:0.5px solid #eee;">
+                        🧬 Vello: <b>${v.gro}</b>
+                    </div>
+                    <div style="font-size:11px; color:var(--gray); background:#f9f9f9; padding:4px 8px; border-radius:6px; border:0.5px solid #eee;">
+                        🕸️ Densidad: <b>${v.den}</b>
+                    </div>
+                </div>
+
+                <div style="background:#f0f0f0; height:4px; border-radius:2px; margin-bottom:4px;">
+                    <div style="background:${intensityColor}; width:${finalLvl*10}%; height:100%; border-radius:2px;"></div>
+                </div>
+                <p style="font-size:11px; margin:0 0 15px 0;">Potencia Recomendada: <b>Nivel ${finalLvl}</b></p>
+
+                <div class="tip-box">
+                    <ul style="margin:0; padding-left:15px; font-size:12px; line-height:1.6;">
+                        ${instrucciones.map(t => `<li>${t}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div id="${cid}">
+                    <button class="btn-main" style="margin-top:15px; font-size:14px; padding:12px;" onclick="registerAndPlan('${z}')">✅ Marcar Sesión Realizada</button>
+                </div>
+            </div>`;
+    });
+
+    // Cuadro de protocolo post-sesión
+    res.innerHTML += `
+        <div class="helper-box" style="background:#fff; border-style:solid; border-color:var(--secondary); margin-bottom:100px;">
+            <h3 style="font-size:14px; color:var(--secondary); margin-top:0;">🛡️ Protocolo Post-Tratamiento</h3>
+            <p style="font-size:12px; margin-bottom:0;">• Hidrata con Aloe Vera inmediatamente.<br>• Evita exposición solar directa en las zonas tratadas.<br>• No realices ejercicio intenso en las próximas 12 horas.</p>
+        </div>
+    `;
+
+    if(document.querySelector('.screen.active').id !== 'scr-home') showScreen('scr-home');
+}
+    
+function scheduleCalendar(zone, iso) {
+    const d = new Date(iso).toISOString().replace(/-|:|\.\d\d\d/g, "");
+    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=Láser+Ulike:+${encodeURIComponent(zone)}&dates=${d}/${d}&details=Recuerda+afeitarte+12h+antes.`;
+    window.open(url, '_blank');
+}
+
+let progChart = null; // Variable global para el gráfico
+
+function renderProgress() {
+    const ctx = document.getElementById('progressChart').getContext('2d');
+    
+    // Contar sesiones por zona para el gráfico
+    const counts = {};
+    state.selectedZones.forEach(z => {
+        counts[z] = state.sessions.filter(s => s.zone === z).length;
+    });
+
+    // Destruir gráfico anterior si existe para evitar duplicados
+    if (progChart) progChart.destroy();
+
+    progChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(counts),
+            datasets: [{
+                data: Object.values(counts),
+                backgroundColor: ['#ff4d6d', '#70a1ff', '#4caf50', '#ff9800', '#9c27b0', '#00bcd4'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            plugins: { 
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } 
+            },
+            cutout: '70%'
+        }
+    });
+
+    // Renderizar el Calendario
+    renderCalendar();
+    
+    // Renderizar la lista de historial
+    document.getElementById('history-items').innerHTML = state.sessions.slice(-5).reverse().map(s => `
+        <div style="padding:10px 0; border-bottom:1px solid #f0f0f0; display:flex; justify-content:space-between;">
+            <span><b>${s.zone}</b></span>
+            <span style="color:var(--gray)">${new Date(s.date).toLocaleDateString()}</span>
+        </div>`).join('') || "Sin sesiones registradas aún.";
+}
+
+function resetApp() { if(confirm("¿Seguro que quieres borrar todo tu progreso y perfil?")) { localStorage.clear(); location.reload(); } }
+
+init();
+
+let currentViewDate = new Date(); // Para navegar entre meses
+
+function changeMonth(offset) {
+    currentViewDate.setMonth(currentViewDate.getMonth() + offset);
+    renderCalendar();
+}
+
+function renderCalendar() {
+    const grid = document.getElementById('calendar-grid');
+    const label = document.getElementById('current-month-year');
+    const details = document.getElementById('day-details');
+    grid.innerHTML = "";
+    
+    const year = currentViewDate.getFullYear();
+    const month = currentViewDate.getMonth();
+    
+    label.innerText = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(currentViewDate);
+    
+    // Cabecera de días
+    ['D','L','M','X','J','V','S'].forEach(d => {
+        grid.innerHTML += `<div style="font-weight:bold; color:var(--gray); padding-bottom:5px;">${d}</div>`;
+    });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Espacios en blanco
+    for(let i=0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
+
+    // Días del mes
+    for(let d=1; d <= daysInMonth; d++) {
+        const dateStr = new Date(year, month, d).toLocaleDateString();
+        // Buscar sesiones en este día
+        const sessionsToday = state.sessions.filter(s => new Date(s.date).toLocaleDateString() === dateStr);
+        
+        const hasSession = sessionsToday.length > 0;
+        const isToday = new Date().toLocaleDateString() === dateStr;
+        
+        const dayEl = document.createElement('div');
+        dayEl.style.cssText = `
+            padding: 8px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            ${hasSession ? 'background: var(--primary); color: white; font-weight: bold;' : ''}
+            ${isToday && !hasSession ? 'border: 1px solid var(--primary); color: var(--primary);' : ''}
+        `;
+        dayEl.innerText = d;
+        
+        if(hasSession) {
+            dayEl.onclick = () => {
+                const zonas = sessionsToday.map(s => s.zone).join(", ");
+                details.innerHTML = `<b>${dateStr}:</b> Sesiones en ${zonas}`;
+            };
+        } else {
+            dayEl.onclick = () => details.innerHTML = `Sin registros el ${dateStr}`;
+        }
+        
+        grid.appendChild(dayEl);
+    }
+}
+</script>
+</body>
+</html>
