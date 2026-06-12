@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <title>Ulike Air 10 Assistant Pro</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+
+    <meta name="theme-color" content="#e86a8c">
+
+    <!-- iPhone -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent">
+
+    <meta name="apple-mobile-web-app-title"
+          content="Ulike AI Pro">
+
+    <link rel="apple-touch-icon"
+          href="assets/icon-192.png">
+
+    <!-- Librerías -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+
+    <div id="splash-screen">
+
+        <img src="assets/splash.jpg" alt="Laser IPL">
+
+    </div>
+
+    <div id="scr-welcome" class="screen active">
+        <div style="text-align: center; margin-top: 80px;">
+            <div style="font-size: 80px;">✨</div>
+            <h1>Ulike AI Assistant</h1>
+            <p style="color: var(--gray);">Protocolos expertos para tu Air 10</p>
+            <div id="welcome-action-area" style="margin-top: 40px;">
+                <button class="btn-main" onclick="showScreen('scr-profile')">Empezar Configuración</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scr-profile" class="screen">
+        <h2>👤 Perfil Biométrico</h2>
+        <div class="card">
+            <label>Tono de Piel (Escala Fitzpatrick)</label>
+            <select id="p-skin">
+                <option value="1">I - Muy Blanca (Siempre se quema)</option>
+                <option value="2">II - Blanca (Se quema fácil)</option>
+                <option value="3">III - Trigueña Clara</option>
+                <option value="4">IV - Trigueña Oscura</option>
+                <option value="5">V - Oscura (Gran resistencia)</option>
+            </select>
+
+            <label>¿Has usado láser clínico antes?</label>
+            <select id="p-clinical">
+                <option value="no">No, nunca</option>
+                <option value="si">Sí, en centros de estética</option>
+            </select>
+
+            <label>Color natural del vello</label>
+            <div class="hair-color-container">
+                <div class="hair-option" id="h-negro" onclick="setHair('negro')">
+                    <div class="color-circle" style="background: #1a1a1a;"></div>Negro
+                </div>
+                <div class="hair-option" id="h-castano" onclick="setHair('castano')">
+                    <div class="color-circle" style="background: #4b3621;"></div>Castaño
+                </div>
+                <div class="hair-option" id="h-rubio" onclick="setHair('rubio')">
+                    <div class="color-circle" style="background: #e1b382;"></div>Rubio
+                </div>
+            </div>
+
+            <label>Sensibilidad de Piel</label>
+            <select id="p-sens" onchange="toggleSensHelper()">
+                <option value="baja">Baja (Piel resistente)</option>
+                <option value="alta">Alta (Se irrita con facilidad)</option>
+                <option value="no_se">No lo sé (Ayúdame a saber)</option>
+            </select>
+
+            <div id="sens-helper-ui" class="helper-box" style="display:none;">
+                <b>Test de Sensibilidad:</b><br>
+                <label style="font-weight:400; margin-top:10px;"><input type="checkbox" class="s-check" onchange="autoDetectSensitivity()">¿Tu piel se pone roja tras el sol?</label>
+                <label style="font-weight:400"><input type="checkbox" class="s-check" onchange="autoDetectSensitivity()">¿Sientes ardor al usar cremas?</label>
+                <label style="font-weight:400"><input type="checkbox" class="s-check" onchange="autoDetectSensitivity()"> ¿Te salen puntos rojos al afeitarte?</label>
+                <label style="font-weight:400">
+                    <input
+                        type="checkbox"
+                        id="sens-none"
+                        onchange="autoDetectSensitivity()"
+                    >
+                    Ninguna de las anteriores
+                </label>
+                <p style="font-size:11px; color:var(--primary); margin-top:10px;">Si marcaste 2 o más, selecciona "Alta" arriba.</p>
+            </div>
+
+            <button class="btn-main" style="margin-top:20px" onclick="saveProfile(); showScreen('scr-zones')">Siguiente paso →</button>
+        </div>
+    </div>
+
+    <div id="scr-zones" class="screen">
+        <h2>📍 Zonas a Tratar</h2>
+        <div class="zones-grid" id="zones-container"></div>
+        <button class="btn-main" style="margin-top:25px;" onclick="goToVelloDetails()">Analizar Vello por Zona</button>
+    </div>
+
+    <div id="scr-details" class="screen">
+        <h2>🔬 Análisis Foliar</h2>
+        <div id="vello-details-list"></div>
+        <button class="btn-main" onclick="generateMasterPlan()">Generar Plan Maestro</button>
+    </div>
+
+    <div id="scr-home" class="screen">
+        <h1>🏠 Mi Plan Air 10</h1>
+
+        <div class="card" style="text-align:center;">
+            <h3 style="margin:0;">🔥 Streak</h3>
+            <p id="streak-count" style="font-size:22px; font-weight:bold; margin:5px 0;">0 días</p>
+            <p id="best-streak" style="font-size:11px; color:var(--gray);">Mejor racha: 0</p>
+        </div>
+        
+        <div class="sun-mode">
+            <div>
+                <span style="font-weight: 700;">☀️ Modo Sensibilidad Solar</span><br>
+                <small>Activar si estuviste en el sol hoy</small>
+            </div>
+            <input type="checkbox" id="sunSwitch" onchange="toggleSolarMode()">
+        </div>
+
+        <div class="card" id="safety-card">
+            <h3 style="margin-bottom:15px; color:var(--primary);">🛡️ Protocolo de Seguridad</h3>
+            <div class="checklist-item">
+                <input type="checkbox" class="safety-check" onchange="checkSafety()"> <span>Zona rasurada (12-24h antes)</span>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" class="safety-check" onchange="checkSafety()"> <span>Lentes de protección listos</span>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" class="safety-check" onchange="checkSafety()"> <span>Piel sin cremas ni desodorante</span>
+            </div>
+            <p id="safety-msg" style="font-size:11px; color:var(--gray); text-align:center;">Completa el protocolo para ver tu plan</p>
+        </div>
+
+        <div class="card" id="contra-card">
+            <h3 style="color:red;">🚫 Contraindicaciones</h3>
+
+            <div class="checklist-item">
+                <input type="checkbox" class="contra-check" onchange="checkContra()"> 
+                <span>Tengo tatuajes/lunares oscuros en la zona</span>
+            </div>
+
+            <div class="checklist-item">
+                <input type="checkbox" class="contra-check" onchange="checkContra()"> 
+                <span>Tengo eczema, psoriasis o piel irritada</span>
+            </div>
+
+            <div class="checklist-item">
+                <input type="checkbox" class="contra-check" onchange="checkContra()"> 
+                <span>Tengo heridas abiertas</span>
+            </div>
+
+            <div class="checklist-item">
+                <input type="checkbox" class="contra-check" onchange="checkContra()"> 
+                <span>Estoy usando medicamentos fotosensibles</span>
+            </div>
+
+            <div class="checklist-item">
+                <input type="checkbox" id="noContra" onchange="clearContra()">
+                <span>No tengo ninguna contraindicación</span>
+            </div>
+
+        <p id="contra-msg" style="font-size:11px; color:var(--gray); text-align:center;">
+            Si marcas alguno, el tratamiento será bloqueado
+        </p>
+    </div>
+
+        <div id="plan-results"></div>
+    </div>
+
+    <div id="scr-progress" class="screen">
+        <h2>📈 Mi Progreso</h2>
+        
+        <div class="card">
+            <canvas id="progressChart" style="max-height: 250px;"></canvas>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom:15px; font-size:16px;">📅 Historial Visual</h3>
+            <div id="calendar-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <button onclick="changeMonth(-1)" style="border:none; background:none; font-size:18px;">‹</button>
+                <span id="current-month-year" style="font-weight:bold; font-size:14px;"></span>
+                <button onclick="changeMonth(1)" style="border:none; background:none; font-size:18px;">›</button>
+            </div>
+            <div class="card">
+                <h3>🧠 Modo AI Pro</h3>
+                <label style="display:flex; justify-content:space-between; align-items:center;">
+                    Activar inteligencia adaptativa
+                    <input type="checkbox" id="aiSwitch" onchange="toggleAI()">
+                </label>
+            </div>
+            
+            <div id="calendar-grid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:5px; text-align:center; font-size:12px;"></div>
+            <div id="day-details" style="margin-top:15px; font-size:11px; color:var(--gray); min-height:20px;">
+                Selecciona un día marcado para ver zonas.
+            </div>
+        </div>
+
+        <div id="history-list" class="card">
+            <h3>Últimas Sesiones</h3>
+            <div id="history-items" style="margin-top:10px; font-size:13px;"></div>
+        </div>
+    </div>
+
+    <nav class="nav" id="bottom-nav">
+        <button class="nav-btn" onclick="showScreen('scr-home')"><span>🏠</span>PLAN</button>
+        <button class="nav-btn" onclick="showScreen('scr-progress')"><span>📈</span>PROGRESO</button>
+        <button class="nav-btn" onclick="showScreen('scr-profile')"><span>👤</span>PERFIL</button>
+        <button class="nav-btn" onclick="resetApp()" style="color:red"><span>⚠️</span>RESET</button>
+    </nav>
+
+<script src="js/state.js"></script>
+
+<script src="js/zones.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/safety.js"></script>
+<script src="js/planner.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/sessions.js"></script>
+
+<script src="js/app.js"></script>
+<script src="js/splash.js"></script>
+</body>
+</html>
